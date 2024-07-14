@@ -5,6 +5,8 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from league_methods import *
+from enum import Enum
+
 
 load_dotenv()
 
@@ -17,6 +19,13 @@ client = commands.Bot(command_prefix='/', intents=intents)
 
 player = False
 guild=discord.Object(id=971400515600658464)
+
+class Region(Enum):
+    America = "americas",
+    Europe = "europe",
+    Asia = "asia",
+    SEA = "sea"
+
 
 @client.event
 async def on_ready():
@@ -63,10 +72,10 @@ async def track(interaction:discord.Interaction, person: discord.Member):
 )
 @app_commands.describe(league_user="Username#Tagline")
 @app_commands.rename(league_user="riot_id")
-async def register(interaction: discord.Interaction, league_user: str):
+async def register(interaction: discord.Interaction, league_user: str, region: Region):
     try:
-        riotID = search_riot_id(league_user)
-        cur.execute("INSERT INTO players VALUES (?, ?) ON CONFLICT (discord) DO UPDATE SET riot = excluded.riot", (interaction.user.id, riotID))
+        riotID = search_riot_id(league_user, region.value[0])
+        cur.execute("INSERT INTO players VALUES (?, ?, ?) ON CONFLICT (discord) DO UPDATE SET riot = excluded.riot, region = excluded.region", (interaction.user.id, riotID, region.value[0]))
         con.commit()
         await interaction.response.send_message("Registered!", ephemeral=True)
     except Exception as e:

@@ -7,7 +7,8 @@ def db_init():
     cur.execute("DROP TABLE if exists players")
     cur.execute("""CREATE TABLE players(
             discord integer primary key, 
-            riot text not null
+            riot text not null,
+            region text not null
             ) """)
     
 def get_riot_id(userid):
