@@ -7,6 +7,7 @@ def db_init():
     cur.execute("DROP TABLE if exists players")
     cur.execute("""CREATE TABLE players(
             discord integer primary key, 
+            username text not null,
             riot text not null,
             region text not null
             ) """)
