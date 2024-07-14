@@ -4,5 +4,6 @@ check if tracked player is in a live game, if so then
 else
   wait 15 minutes (shortest game time) and check again
 
-adress variable locality (stop different servers sharing all variables lol)
+address variable locality (stop different servers sharing all variables lol)
+
 remove guild id from code to make functions global
