@@ -7,3 +7,6 @@ else
 address variable locality (stop different servers sharing all variables lol)
 
 remove guild id from code to make functions global
+
+
+Make sync command and turn commands global

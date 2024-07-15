@@ -11,6 +11,14 @@ def db_init():
             riot text not null,
             region text not null
             ) """)
+    con.commit()
+    cur.execute("DROP TABLE if exists guilds")
+    cur.execute("""CREATE TABLE guilds(
+            gid integer primary key, 
+            pid integer, 
+            player text
+            ) """)
+    con.commit()
     
 def get_riot_id(userid):
     cur.execute("")

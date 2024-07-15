@@ -15,10 +15,10 @@ cur = con.cursor()
 
 intents = discord.Intents.default()
 intents.message_content = True
+intents.guilds=True
 client = commands.Bot(command_prefix='/', intents=intents)
 
-player = None
-guild=discord.Object(id=971400515600658464)
+guild = discord.Object(id=os.getenv("GUILD_ID"))
 
 class Region(Enum):
     America = "americas",
@@ -26,17 +26,22 @@ class Region(Enum):
     Asia = "asia",
     SEA = "sea"
 
-class Player():
-    def __init__(self,discord, username,riot,region):
-        self.discord = discord
-        self.username = username
-        self.riot = riot
-        self.region = region
+@client.event
+async def on_guild_join(guild):
+    await client.tree.sync(guild=guild)
+    try:
+        cur.execute("INSERT INTO guilds VALUES (?, ?, ?)", (guild.id, None, None))
+        con.commit()
+    except Exception as e:
+        print(e)
 
+@client.event
+async def on_guild_remove(guild):
+    cur.execute("DELETE FROM guilds WHERE gid = ?", (guild.id,))
 
 @client.event
 async def on_ready():
-    await client.tree.sync(guild=guild)
+    # await client.tree.sync(guild=guild)
     print(f'We have logged in as {client.user}')
 
 @client.tree.command(
@@ -61,32 +66,36 @@ async def ping(interaction:discord.Interaction, member: discord.Member):
     name="log",
     description="Logs current player being tracked",
     guild=guild
+
 )
 async def log(interaction:discord.Interaction):
+    player = cur.execute("SELECT * FROM guilds WHERE gid = ?", (interaction.guild_id,)).fetchone()
     if(player == None):
         await interaction.response.send_message("No player currently being tracked... Use /track to add them.")
     else:
-        await interaction.response.send_message(f"Currently tracking {player.username}")
+        await interaction.response.send_message(f"Currently tracking {player[2]}")
 
 @client.tree.command(
     name="track",
     description="Adds player to be tracked",
-    guild=guild
+        guild=guild
+
 )
 async def track(interaction:discord.Interaction, person: discord.Member):
-    global player
     player = cur.execute("SELECT * FROM players WHERE discord = ?", (person.id,)).fetchone()
     if (player == None):
         await interaction.response.send_message(f"Player {person.display_name} is not registered. Use /register to register them.")
     else:
-        player = Player(player[0], player[1], player[2], player[3])
+        cur.execute("UPDATE guilds SET pid = ?, player = ? where gid = ?", (person.id, person.display_name, interaction.guild_id))
+        con.commit()
         await interaction.response.send_message(f"Currently tracking {person.display_name}")
 
     
 @client.tree.command(
         name="register",
         description="Register your riot account",
-        guild=guild
+            guild=guild
+
 )
 @app_commands.describe(league_user="Username#Tagline")
 @app_commands.rename(league_user="riot_id")
@@ -104,7 +113,8 @@ async def register(interaction: discord.Interaction, league_user: str, region: R
 @client.tree.command(
     name="unregister",
     description="Unregister your riot account",
-    guild=guild
+        guild=guild
+
 )
 async def unregister(interaction:discord.Interaction):
     cur.execute("DELETE FROM players WHERE discord = ?", (interaction.user.id,))
@@ -113,10 +123,13 @@ async def unregister(interaction:discord.Interaction):
 
 @client.tree.command(
     name="logdb",
-    guild=guild
+        guild=guild
+
 )
 async def logDB(ctx):
     res = cur.execute("SELECT * from players")
+    print(res.fetchall())
+    res = cur.execute("SELECT * from guilds")
     print(res.fetchall())
 
 client.run(os.getenv("DISCORD_BOT_TOKEN"))
