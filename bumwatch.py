@@ -21,10 +21,24 @@ client = commands.Bot(command_prefix='/', intents=intents)
 guild = discord.Object(id=os.getenv("GUILD_ID"))
 
 class Region(Enum):
-    America = "americas",
-    Europe = "europe",
-    Asia = "asia",
-    SEA = "sea"
+    BR = "BR1",
+    EUNE = "EUN1",
+    EUW = "EUW1",
+    LAN = "LA1",
+    LAS = "LA2",
+    NA = "NA1",
+    OCE = "OC1",
+    TR = "TR1",
+    RU = "RU",
+    ME = "ME1",
+    JP = "JP1",
+    KR = "KR",
+    PH = "PH2",
+    TH = "TH2",
+    TW2 = "TW2",
+    VN = "VN2",
+    SG2 = "SG2"
+
 
 @client.event
 async def on_guild_join(guild):
@@ -41,7 +55,7 @@ async def on_guild_remove(guild):
 
 @client.event
 async def on_ready():
-    # await client.tree.sync(guild=guild)
+    await client.tree.sync(guild=guild)
     print(f'We have logged in as {client.user}')
 
 @client.tree.command(
@@ -101,7 +115,7 @@ async def track(interaction:discord.Interaction, person: discord.Member):
 @app_commands.rename(league_user="riot_id")
 async def register(interaction: discord.Interaction, league_user: str, region: Region):
     try:
-        riotID = search_riot_id(league_user, region.value[0])
+        riotID = search_riot_id(league_user)
         cur.execute("INSERT INTO players VALUES (?, ?, ?, ?) ON CONFLICT (discord) DO UPDATE SET riot = excluded.riot, region = excluded.region", (interaction.user.id, interaction.user.global_name, riotID, region.value[0]))
         con.commit()
         await interaction.response.send_message("Registered!", ephemeral=True)

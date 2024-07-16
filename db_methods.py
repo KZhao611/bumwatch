@@ -23,6 +23,11 @@ def db_init():
 def get_riot_id(userid):
     cur.execute("")
 
+def logDB():
+    res = cur.execute("SELECT * from players")
+    print(res.fetchall())
+    res = cur.execute("SELECT * from guilds")
+    print(res.fetchall())
 
 if __name__ == "__main__":
-    db_init()
+    logDB()
