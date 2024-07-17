@@ -5,7 +5,6 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from league_methods import *
-from enum import Enum
 
 
 load_dotenv()
@@ -19,25 +18,6 @@ intents.guilds=True
 client = commands.Bot(command_prefix='/', intents=intents)
 
 guild = discord.Object(id=os.getenv("GUILD_ID"))
-
-class Region(Enum):
-    BR = "BR1",
-    EUNE = "EUN1",
-    EUW = "EUW1",
-    LAN = "LA1",
-    LAS = "LA2",
-    NA = "NA1",
-    OCE = "OC1",
-    TR = "TR1",
-    RU = "RU",
-    ME = "ME1",
-    JP = "JP1",
-    KR = "KR",
-    PH = "PH2",
-    TH = "TH2",
-    TW2 = "TW2",
-    VN = "VN2",
-    SG2 = "SG2"
 
 
 @client.event
@@ -109,7 +89,6 @@ async def track(interaction:discord.Interaction, person: discord.Member):
         name="register",
         description="Register your riot account",
             guild=guild
-
 )
 @app_commands.describe(league_user="Username#Tagline")
 @app_commands.rename(league_user="riot_id")
@@ -145,5 +124,14 @@ async def logDB(ctx):
     print(res.fetchall())
     res = cur.execute("SELECT * from guilds")
     print(res.fetchall())
+
+@client.tree.command(
+    name="start",
+    description="Start tracking games",
+    guild=guild
+)
+async def startTracking(ctx):
+    pass
+
 
 client.run(os.getenv("DISCORD_BOT_TOKEN"))
