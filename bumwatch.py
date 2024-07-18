@@ -73,14 +73,14 @@ async def log(interaction:discord.Interaction):
     name="track",
     description="Adds player to be tracked",
         guild=guild
-
 )
 async def track(interaction:discord.Interaction, person: discord.Member):
     player = cur.execute("SELECT * FROM players WHERE discord = ?", (person.id,)).fetchone()
     if (player == None):
         await interaction.response.send_message(f"Player {person.display_name} is not registered. Use /register to register them.")
     else:
-        cur.execute("UPDATE guilds SET pid = ?, player = ? where gid = ?", (person.id, person.display_name, interaction.guild_id))
+        cur.execute("INSERT INTO guilds VALUES (?,?,?,?) ON CONFLICT (gid) DO UPDATE SET pid = excluded.pid, region = excluded.region, player = excluded.player", (interaction.guild_id, player[2], player[3], person.display_name))
+        # GID, PID, REGION, PLAYER
         con.commit()
         await interaction.response.send_message(f"Currently tracking {person.display_name}")
 
@@ -130,8 +130,19 @@ async def logDB(ctx):
     description="Start tracking games",
     guild=guild
 )
-async def startTracking(ctx):
-    pass
+async def startTracking(interaction: discord.Interaction):
+    await interaction.response.send_message("Tracking started!")
+    await tracker(interaction)
+
+async def tracker(interaction: discord.Interaction):
+    player = cur.execute("SELECT * FROM guilds WHERE gid = ?", (interaction.guild_id,)).fetchone()
+    print("Started following player " + str(player[1]))
+    while True:
+        print(player)
+        message = await game_loop(player[1], player[2])
+        if(not message):
+            return
+        await interaction.channel.send(message)
 
 
 client.run(os.getenv("DISCORD_BOT_TOKEN"))

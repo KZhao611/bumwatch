@@ -3,6 +3,7 @@ import os
 import requests
 import asyncio
 from enum import Enum
+from grokcloud import ai_call
 
 load_dotenv()
 
@@ -39,36 +40,35 @@ def search_riot_id(str):
 # returns false if not in game, teamID if in live game
 # works for not in live game
 def is_live(puuid, region):
-    res = requests.get(f"https://{region.value[0]}.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/{puuid}?api_key={api_key}")
-    print(f"https://{region.value[0]}.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/{puuid}?api_key={api_key}")
+    print("Looking for live game")
+    res = requests.get(f"https://{region}.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/{puuid}?api_key={api_key}")
     if res.status_code == 404:
-        return False
-    print(res.status_code)
+        return (False, False)
     data = res.json()
     for player in data['participants']:
         if(player['puuid'] == puuid):
-            return (player['teamId'], data["game_Id"])
+            return (player['teamId'], data['gameId'])
 
 async def match_data(matchID, region):
     router = ""
-    if region in (Region.NA, Region.BR, Region.LAN, Region.LAS):
+    if region in (Region.NA.value[0], Region.BR.value[0], Region.LAN.value[0], Region.LAS.value[0]):
         router = "americas"
-    elif region in (Region.KR, Region.JP):
+    elif region in (Region.KR.value[0], Region.JP.value[0]):
         router = "asia"
-    elif region in (Region.EUNE, Region.EUW, Region.ME, Region.TR, Region.RU):
+    elif region in (Region.EUNE.value[0], Region.EUW.value[0], Region.ME.value[0], Region.TR.value[0], Region.RU.value[0]):
         router = "europe"
     else:
         router = "sea"
-    while res := requests.get(f"https://{router}.api.riotgames.com/lol/match/v5/matches/{region.value[0]}_{matchID}?api_key={api_key}"):
-        if res.status_code == 200:
-            break
+    while not (res := requests.get(f"https://{router}.api.riotgames.com/lol/match/v5/matches/{region}_{matchID}?api_key={api_key}")):
+        print("Waiting for game to end")
         await asyncio.sleep(2 * 60)
     data = res.json()
-    return data["info"]['participants']
+    print(data)
+    return data['info']['participants']
 
 # Returns false if user hasn't entered a game in an hour
 async def game_loop(puuid, region):
-    teamID = 200
+    teamID = 100
     for i in range(3):
         await asyncio.sleep(20 * 60)
         teamID, matchId = is_live(puuid, region)
@@ -76,19 +76,19 @@ async def game_loop(puuid, region):
             break
     if(not teamID):
         return False
+    print("Game found! matchID: " + str(matchId))
     members = await match_data(matchId, region)
     members = list(filter(lambda x: x['teamId'] == teamID, members))
-    for member in members:
-        print(member['riotIdGameName'])
+    filtered_stats = ['riotIdGameName', 'totalDamageDealtToChampions', 'kills', 'assists', 'deaths', 'goldEarned', 'totalMinionsKilled', 'teamPosition']
+    members = [
+        {attr: item[attr] for attr in filtered_stats}        
+        for item in members if item['teamPosition'] != 'UTILITY'
+    ]
+    print("Stats grabbed, calling ai")
+    return ai_call(members)
 
 
-
-# when /start is called, set an interval to call is_live 
-# if is_live returns an integer within 3 runs, then move into the wait_for_end loop
+# asyncio.run(game_loop("AzGFZPPpy3Rm0N6p1nPqrNUByTvw5VhEu3NERa7yylvbGovlvGgMiYuxag6RMPDlAangkjn4UK4z7Q", "NA1"))
+# print(is_live("AzGFZPPpy3Rm0N6p1nPqrNUByTvw5VhEu3NERa7yylvbGovlvGgMiYuxag6RMPDlAangkjn4UK4z7Q", "NA1"))
 
 # unschedule is_live and schedule wait_for_end
-async def main():
-    x = await match_data(5037352216, Region.NA)
-    print(x)
-
-asyncio.run(game_loop(1,1))

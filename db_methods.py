@@ -16,6 +16,7 @@ def db_init():
     cur.execute("""CREATE TABLE guilds(
             gid integer primary key, 
             pid integer, 
+            region text,
             player text
             ) """)
     con.commit()
@@ -31,3 +32,4 @@ def logDB():
 
 if __name__ == "__main__":
     logDB()
+    # db_init()

@@ -1,12 +1,13 @@
 todo:
-check if tracked player is in a live game, if so then
-  python equivalent of setInterval() to check if game has finished every minute 
-else
-  wait 15 minutes (shortest game time) and check again
 
-address variable locality (stop different servers sharing all variables lol)
+remove load_dotenv() from other files other than bumwatch.py
 
 remove guild id from code to make functions global
 
-
 Make sync command and turn commands global
+
+Set up raspberry pi to run this maybe
+
+Possible future implements:
+
+Polling for game end takes in game length from isLive in order to poll less at earlier games, and more as the game progressess
