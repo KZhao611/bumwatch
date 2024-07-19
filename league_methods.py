@@ -40,7 +40,6 @@ def search_riot_id(str):
 # returns false if not in game, teamID if in live game
 # works for not in live game
 def is_live(puuid, region):
-    print("Looking for live game")
     res = requests.get(f"https://{region}.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/{puuid}?api_key={api_key}")
     if res.status_code == 404:
         return (False, False)
@@ -63,7 +62,6 @@ async def match_data(matchID, region):
         print("Waiting for game to end")
         await asyncio.sleep(2 * 60)
     data = res.json()
-    print(data)
     return data['info']['participants']
 
 # Returns false if user hasn't entered a game in an hour
@@ -76,7 +74,7 @@ async def game_loop(puuid, region):
             break
     if(not teamID):
         return False
-    print("Game found! matchID: " + str(matchId))
+    print("Game found!")
     members = await match_data(matchId, region)
     members = list(filter(lambda x: x['teamId'] == teamID, members))
     filtered_stats = ['riotIdGameName', 'totalDamageDealtToChampions', 'kills', 'assists', 'deaths', 'goldEarned', 'totalMinionsKilled', 'teamPosition']
@@ -84,11 +82,44 @@ async def game_loop(puuid, region):
         {attr: item[attr] for attr in filtered_stats}        
         for item in members if item['teamPosition'] != 'UTILITY'
     ]
-    print("Stats grabbed, calling ai")
+    # print(members)
+    # print("Stats grabbed, calling ai")
     return ai_call(members)
 
 
-# asyncio.run(game_loop("AzGFZPPpy3Rm0N6p1nPqrNUByTvw5VhEu3NERa7yylvbGovlvGgMiYuxag6RMPDlAangkjn4UK4z7Q", "NA1"))
-# print(is_live("AzGFZPPpy3Rm0N6p1nPqrNUByTvw5VhEu3NERa7yylvbGovlvGgMiYuxag6RMPDlAangkjn4UK4z7Q", "NA1"))
-
 # unschedule is_live and schedule wait_for_end
+
+async def last_game(puuid,region):
+    router = ""
+    if region in (Region.NA.value[0], Region.BR.value[0], Region.LAN.value[0], Region.LAS.value[0]):
+        router = "americas"
+    elif region in (Region.KR.value[0], Region.JP.value[0]):
+        router = "asia"
+    elif region in (Region.EUNE.value[0], Region.EUW.value[0], Region.ME.value[0], Region.TR.value[0], Region.RU.value[0]):
+        router = "europe"
+    else:
+        router = "sea"
+    res = requests.get(f"https://{router}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count=1&api_key={api_key}")
+    data = res.json()
+    # print(data[0])
+    res = requests.get(f"https://{router}.api.riotgames.com/lol/match/v5/matches/{data[0]}?api_key={api_key}")
+    data = res.json()
+    members = data['info']['participants']
+    members_blue = list(filter(lambda x: x['teamId'] == 100, members))
+    # for member in members_blue:
+    #     print(member['riotIdGameName'])
+    right_team = False
+    for member in members_blue:
+        if(member['puuid'] == puuid):
+            right_team = True
+    if not right_team:
+        members = list(filter(lambda x: x['teamId'] == 200, members))
+    else:
+        members = members_blue
+    filtered_stats = ['riotIdGameName', 'totalDamageDealtToChampions', 'kills', 'assists', 'deaths', 'goldEarned', 'totalMinionsKilled', 'teamPosition']
+    members = [
+        {attr: item[attr] for attr in filtered_stats}        
+        for item in members if item['teamPosition'] != 'UTILITY'
+    ]
+    # print(human_call(members))
+    return ai_call(members)

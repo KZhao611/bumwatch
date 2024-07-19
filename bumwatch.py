@@ -132,17 +132,25 @@ async def logDB(ctx):
 )
 async def startTracking(interaction: discord.Interaction):
     await interaction.response.send_message("Tracking started!")
-    await tracker(interaction)
-
-async def tracker(interaction: discord.Interaction):
     player = cur.execute("SELECT * FROM guilds WHERE gid = ?", (interaction.guild_id,)).fetchone()
-    print("Started following player " + str(player[1]))
+    print("Started following player " + str(player[3]))
     while True:
-        print(player)
+        # print(player)
         message = await game_loop(player[1], player[2])
         if(not message):
             return
-        await interaction.channel.send(message)
+        if('prev_message' in locals()):
+            await prev_message.delete()
+        prev_message = await interaction.channel.send(message)
 
+@client.tree.command(
+        name="last_game",
+        description="Show last game",
+        guild=guild
+)
+async def lastGame(interaction: discord.Interaction):
+    player = cur.execute("SELECT * FROM guilds WHERE gid = ?", (interaction.guild_id,)).fetchone()
+    message = await last_game(player[1], player[2])
+    await interaction.channel.send(message)
 
 client.run(os.getenv("DISCORD_BOT_TOKEN"))
