@@ -11,7 +11,7 @@ def helper_ai_call(message):
         messages=[
             {
                 "role": "system",
-                "content": "You are a TV caster of Bumwatch, which reports the stars based on the lowest performers. Make a funny quip for the star of each category, and crown a big winner for tonight.",
+                "content": "You are the tv caster of a gameshow called bumwatch which takes league games and announces who the losers are (worst stats). Make separate quips for least damage, least kills, least gold, least cs, most deaths, and the biggest bum. Include no stage cues.",
             },
             {
                 "role": "user",
@@ -19,6 +19,7 @@ def helper_ai_call(message):
             }
         ],
         model="llama3-8b-8192",
+        max_tokens=400,
     )
     return response.choices[0].message.content
 
@@ -36,24 +37,25 @@ def ai_call(message):
     min_damage = [member['totalDamageDealtToChampions'] for member in message]
     min_kills = [member['kills'] for member in message]
     min_gold = [member['goldEarned'] for member in message]
-    min_cs = [member['totalMinionsKilled'] for member in message]
+    min_cs = [member['neutralMinionsKilled'] + member['totalMinionsKilled'] for member in message]
     max_deaths = [member['deaths'] for member in message]
 
-    min_damage = [member['riotIdGameName'] for member in message if member['totalDamageDealtToChampions'] == min(min_damage)][0]
-    min_kills = [member['riotIdGameName'] for member in message if member['kills'] == min(min_kills)][0]
-    min_gold = [member['riotIdGameName'] for member in message if member['goldEarned'] == min(min_gold)][0]
-    min_cs = [member['riotIdGameName'] for member in message if member['totalMinionsKilled'] == min(min_cs)][0]
-    max_deaths = [member['riotIdGameName'] for member in message if member['deaths'] == max(max_deaths)][0]
+    min_damage = [(member['riotIdGameName'], member['totalDamageDealtToChampions']) for member in message if member['totalDamageDealtToChampions'] == min(min_damage)][0]
+    min_kills = [(member['riotIdGameName'], member['kills']) for member in message if member['kills'] == min(min_kills)][0]
+    min_gold = [(member['riotIdGameName'], member['goldEarned']) for member in message if member['goldEarned'] == min(min_gold)][0]
+    min_cs = [(member['riotIdGameName'], member['neutralMinionsKilled'] + member['totalMinionsKilled']) for member in message if member['neutralMinionsKilled'] + member['totalMinionsKilled'] == min(min_cs)][0]
+    max_deaths = [(member['riotIdGameName'], member['deaths']) for member in message if member['deaths'] == max(max_deaths)][0]
 
-    winner = most_frequent([min_damage, min_kills, min_gold, min_cs, max_deaths])
+    winner = most_frequent([min_damage[0], min_kills[0], min_gold[0], min_cs[0], max_deaths[0]])
 
-    message = stats_message = f"""
-                                **Least Damage:** {min_damage}
-                                **Least Kills:** {min_kills}
-                                **Least Gold:** {min_gold}
-                                **Least CS:** {min_cs}
-                                **Most Deaths:** {max_deaths}
-                                **Big Winner:** {winner}
+    message = f"""
+Least Damage: {min_damage[0]} with {min_damage[1]} damage
+Least Kills: {min_kills[0]} with {min_kills[1]} kills
+Least Gold: {min_gold[0]} with {min_gold[1]} gold
+Least CS: {min_cs[0]} with {min_cs[1]} cs
+Most Deaths: {max_deaths[0]} with {max_deaths[1]} deaths
+Biggest Bum: {winner}
                             """
-    return message
+    print(message)
+    return helper_ai_call(message)
 

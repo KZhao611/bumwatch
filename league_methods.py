@@ -116,7 +116,7 @@ async def last_game(puuid,region):
         members = list(filter(lambda x: x['teamId'] == 200, members))
     else:
         members = members_blue
-    filtered_stats = ['riotIdGameName', 'totalDamageDealtToChampions', 'kills', 'assists', 'deaths', 'goldEarned', 'totalMinionsKilled', 'teamPosition']
+    filtered_stats = ['riotIdGameName', 'totalDamageDealtToChampions', 'kills', 'assists', 'deaths', 'goldEarned', 'neutralMinionsKilled', 'totalMinionsKilled', 'teamPosition']
     members = [
         {attr: item[attr] for attr in filtered_stats}        
         for item in members if item['teamPosition'] != 'UTILITY'
