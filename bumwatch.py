@@ -24,7 +24,7 @@ guild = discord.Object(id=os.getenv("GUILD_ID"))
 async def on_guild_join(guild):
     await client.tree.sync(guild=guild)
     try:
-        cur.execute("INSERT INTO guilds VALUES (?, ?, ?)", (guild.id, None, None))
+        cur.execute("INSERT INTO guilds VALUES (?, ?, ?, ?)", (guild.id, None, None, None))
         con.commit()
     except Exception as e:
         print(e)
@@ -45,7 +45,7 @@ async def on_ready():
 )
 async def help(interaction:discord.Interaction):
     await interaction.response.send_message("Welcome to the next season of bumwatch! All participants use /register with their riot username and region. You can unregister with /unregister. "
-                                            "Select one member of the party to start tracking with /track, which can be checked with /log. Then after each game, a new episode of bumwatch will "
+                                            "Select one member of the party to start tracking with /track, which can be checked with /log. Start tracking using /start. Then after each game, a new episode of bumwatch will "
                                             "be aired, starring the players who performed the least that game.", ephemeral=True)
 
 @client.tree.command(

@@ -25,8 +25,10 @@ def get_riot_id(userid):
     cur.execute("")
 
 def logDB():
+    print("Players")
     res = cur.execute("SELECT * from players")
     print(res.fetchall())
+    print("Guilds")
     res = cur.execute("SELECT * from guilds")
     print(res.fetchall())
 

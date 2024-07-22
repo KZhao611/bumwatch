@@ -68,16 +68,16 @@ async def match_data(matchID, region):
 async def game_loop(puuid, region):
     teamID = 100
     for i in range(3):
-        await asyncio.sleep(20 * 60)
         teamID, matchId = is_live(puuid, region)
         if(teamID):
             break
+        await asyncio.sleep(20 * 60)
     if(not teamID):
         return False
     print("Game found!")
     members = await match_data(matchId, region)
     members = list(filter(lambda x: x['teamId'] == teamID, members))
-    filtered_stats = ['riotIdGameName', 'totalDamageDealtToChampions', 'kills', 'assists', 'deaths', 'goldEarned', 'totalMinionsKilled', 'teamPosition']
+    filtered_stats = ['riotIdGameName', 'totalDamageDealtToChampions', 'kills', 'assists', 'deaths', 'goldEarned', 'neutralMinionsKilled', 'totalMinionsKilled', 'teamPosition']
     members = [
         {attr: item[attr] for attr in filtered_stats}        
         for item in members if item['teamPosition'] != 'UTILITY'
