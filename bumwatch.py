@@ -15,6 +15,7 @@ cur = con.cursor()
 intents = discord.Intents.default()
 intents.message_content = True
 intents.guilds=True
+intents.messages=True
 client = commands.Bot(command_prefix='/', intents=intents)
 
 guild = discord.Object(id=os.getenv("GUILD_ID"))
@@ -119,11 +120,12 @@ async def unregister(interaction:discord.Interaction):
         guild=guild
 
 )
-async def logDB(ctx):
+async def logDB(interaction: discord.Interaction):
     res = cur.execute("SELECT * from players")
     print(res.fetchall())
     res = cur.execute("SELECT * from guilds")
     print(res.fetchall())
+    interaction.response.defer()
 
 @client.tree.command(
     name="start",
@@ -152,5 +154,15 @@ async def lastGame(interaction: discord.Interaction):
     player = cur.execute("SELECT * FROM guilds WHERE gid = ?", (interaction.guild_id,)).fetchone()
     message = await last_game(player[1], player[2])
     await interaction.channel.send(message)
+
+@client.tree.command(
+        name="clear",
+        description="Clear bumwatch channel",
+        guild=guild
+)
+async def lastGame(interaction: discord.Interaction):
+    channel = interaction.channel
+    interaction.response.defer()
+    await channel.purge(limit=None)
 
 client.run(os.getenv("DISCORD_BOT_TOKEN"))
