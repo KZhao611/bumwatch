@@ -151,6 +151,7 @@ async def startTracking(interaction: discord.Interaction):
         guild=guild
 )
 async def lastGame(interaction: discord.Interaction):
+    await interaction.response.defer()
     player = cur.execute("SELECT * FROM guilds WHERE gid = ?", (interaction.guild_id,)).fetchone()
     message = await last_game(player[1], player[2])
     await interaction.channel.send(message)
@@ -160,7 +161,7 @@ async def lastGame(interaction: discord.Interaction):
         description="Clear bumwatch channel",
         guild=guild
 )
-async def lastGame(interaction: discord.Interaction):
+async def clear(interaction: discord.Interaction):
     channel = interaction.channel
     await interaction.response.defer()
     await channel.purge(limit=None)
