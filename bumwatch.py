@@ -125,7 +125,7 @@ async def logDB(interaction: discord.Interaction):
     print(res.fetchall())
     res = cur.execute("SELECT * from guilds")
     print(res.fetchall())
-    interaction.response.defer()
+    await interaction.response.defer()
 
 @client.tree.command(
     name="start",
@@ -162,7 +162,7 @@ async def lastGame(interaction: discord.Interaction):
 )
 async def lastGame(interaction: discord.Interaction):
     channel = interaction.channel
-    interaction.response.defer()
+    await interaction.response.defer()
     await channel.purge(limit=None)
 
 client.run(os.getenv("DISCORD_BOT_TOKEN"))
